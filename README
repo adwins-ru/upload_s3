@@ -1,0 +1,75 @@
+* INSTALL *
+========================================================
+
+To install upload_s3 you will need:
+
+1. cmake 2.6
+2. openssl
+3. libcurl
+4. libxml2
+5. glib2
+
+$ cd <upload_s3 source directory>
+$ mkdir -p build && cmake ..
+$ make && sudo make install
+
+
+* USAGE *
+========================================================
+
+Assume you already have Amazon AWS account. 
+Go to the https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key
+and get access key ID and secret access key. 
+
+Go to the S3 console: https://console.aws.amazon.com/s3/home . 
+Create a bucket, name it something like "backup.example.com". 
+
+Using this information, create a configuration file for upload_s3:
+
+$ su
+# cat > /etc/upload_s3.ini
+[upload_s3]
+aws_key=ZZZZZZZZZZZZZZZZZZZZ
+aws_secret=ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+bucket=backup.example.com
+^D
+# chmod go-rwx /etc/upload_s3.ini
+
+Let the fun begin!
+
+Create a backup, using tar, dar, zip or something else. Crypt it somehow, 
+using pgp, gpg, ccrypt or something. You will have a big file named, for example 
+/tmp/backup-YYYYMMDD.dar.cpt . Now it is a time to upload it to 
+Amazon S3 using command:
+
+# upload_s3 -c /etc/upload_s3.ini -pC /tmp/backup-YYYYMMDD.dar.cpt
+
+Bingo!
+
+To place file into some specific directory on S3 side, you can use optional "prefix" 
+parameter after filename. For example: 
+
+# upload_s3 -c /etc/upload_s3.ini -pC /tmp/backup-YYYYMMDD.dar.cpt dayly-backups/
+
+will upload file to "dayly-backups/backup-YYYYMMDD.dar.cpt" on Amazon side.
+
+
+* OPTIONS *
+========================================================
+
+# upload_s3 --help
+Usage:
+  upload_s3 [OPTION...] - Amazon S3 upload utility
+
+Help Options:
+  -h, --help         Show help options
+
+Application Options:
+  -c, --config       Configuration file
+  -t, --test         Exit with status 0 if file exists, 1 otherwise
+  -C, --continue     Continue existing upload if any
+  -k, --keep         Keep existing file (overwrite by default)
+  -d, --delete=M     Delete existing uploads in progress older than M days (0 stand for all)
+  -p, --progress     Show upload progress
+  -v, --verbose      Verbose operation
+
